@@ -1,0 +1,43 @@
+---
+- hosts: all
+
+  tasks:
+
+    - name: Change ssh sshd_config first expression
+      replace:
+         path: /etc/ssh/sshd_config
+         regexp: '^#ClientAliveInterval 0$'
+         replace: 'ClientAliveInterval 120'
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: Change ssh sshd_config second expression
+      replace:
+        path: /etc/ssh/sshd_config
+        regexp: '^#ClientAliveCountMax 3$'
+        replace: 'ClientAliveCountMax 720'
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: reload service sshd
+      systemd:
+        name: sshd
+        state: restarted
+      become: yes
+      become_method: sudo
+      become_user: root
+
+
+    - name: Update repositories and install nginx
+      apt:
+        name: nginx
+        update_cache: yes
+        state: present
+      become: yes
+      become_method: sudo
+      become_user: root
+
+    - name: Run command on root tree nginx
+      shell: ifconfig eth0 | grep inet | grep -v inet6 | awk '{print $2}' | sudo tee /var/www/html/index.html
